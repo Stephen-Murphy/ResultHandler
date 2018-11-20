@@ -77,9 +77,9 @@ export class Result<T = any> {
     }
 
     public static Handler(target: string | Function): ResultHandler {
-        if (!target || typeof target !== 'string' || typeof target !== 'function' || !target!.constructor || !target!.constructor!.name)
+        if (!target || (typeof target !== 'string' && typeof target !== 'function') || !target!.constructor || !target!.constructor!.name)
             throw new Error('Result.Handler() must specify target or target name');
-        const name: string = typeof target === 'string' ? target : target!.constructor!.name;
+        const name: string = typeof target === 'string' ? target : target.name;
         return <T>(method: Function) => {
             if (typeof method !== 'function') throw new Error('Result.Handler()() - invalid method');
             const result = new Result<T>();

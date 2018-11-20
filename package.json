@@ -1,6 +1,6 @@
 {
     "name": "result-handler",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Result Handler",
     "main": "dist/index.js",
     "scripts": {

@@ -46,9 +46,9 @@ export class Result<T> {
         }
         if (this._method) message += this._method + '()';
         if (message) message += ' - ';
-        if (this.error) {
-            if (typeof this.error === 'string') message += this.error;
-            else message += this.error.toString();
+        if (this._error) {
+            if (typeof this._error === 'string') message += this._error;
+            else message += this._error.toString();
         }
         this._message = message;
         return message;
@@ -86,6 +86,11 @@ export class Result<T> {
             result._method = method.name;
             return result as Result<T>;
         };
+    }
+
+    public throw(error?: string | Error) {
+        if (error) this._error = error;
+        throw new Error(this.message);
     }
 
 }

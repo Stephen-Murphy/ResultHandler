@@ -5,6 +5,7 @@ type BaseResult<T = any> = {
     message: string;
     success(value: T): SuccessResult<T>;
     failure(message: string | Error): FailureResult;
+    throw(err: string | Error): FailureResult;
 }
 
 export type SuccessResult<T> = BaseResult<T> & {
@@ -88,8 +89,8 @@ export class Result<T> {
         };
     }
 
-    public throw(error?: string | Error) {
-        if (error) this._error = error;
+    public throw(error: string | Error): FailureResult {
+        this.failure(error);
         throw new Error(this.message);
     }
 

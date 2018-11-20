@@ -24,7 +24,7 @@ export type ResultHandler = {
     <T = any>(method: Function): Result<T>;
 }
 
-export class Result<T> {
+export class Result<T = any> {
 
     public get namespace() { return this._namespace; }
     private _namespace?: string;
@@ -56,13 +56,13 @@ export class Result<T> {
     }
     private _message?: string;
 
-    public success(value: T): SuccessResult<T> {
+    public success(value?: T): SuccessResult<T> {
         this._value = value;
         this._successful = true;
         return this as SuccessResult<T>;
     }
 
-    public static Success<T = any>(value: T) {
+    public static Success<T = any>(value?: T) {
         return (new Result<T>()).success(value);
     }
 

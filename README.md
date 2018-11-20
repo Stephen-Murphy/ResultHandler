@@ -21,22 +21,36 @@ import { Result } from 'result-handler';
 // success: boolean; - readonly
 // failure: boolean; - readonly
 
-export MyClass {
+class MyTestClass {
+
+    createResult: ResultHandler;
 
     constructor() {
-        this.resultHandler = Result(MyClass);
+        this.createResult = Result.Handler(MyTestClass);
     }
 
-    someMethod() {
-
-        const r = this.resultHandler(this.someMethod);
-
-        const data = doStuff(); // ... do some stuff
-
-        if (data) {
-            return r.success(data);
+    someMethod(): Result<number> {
+        const result = this.createResult<number>(this.someMethod);
+        if (Math.random() > 0.1) {
+            return result.success(5);
         } else {
-            return r.error("error message"); // returns throwable error with "MyClass.someMethod()" prepended to error message
+            return result.failure('');
+        }
+    }
+
+    alwaysFails() {
+        return Result.Failure('message');
+    }
+
+    alwaysSucceeds() {
+        return Result.Success(123);
+    }
+
+    mayFail() {
+        if (shouldFail) {
+            return Result.Failure('message');
+        } else {
+            return result.Success(123);
         }
     }
 

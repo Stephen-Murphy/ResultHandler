@@ -11,16 +11,6 @@ Usage with classes
 ````typescript
 import { Result } from 'result-handler';
 
-// Success<T>(value: T) => (new Result()).successful(value);
-// Failure<T>(err: str | error) => (new Result()).failure(msg, value?);
-// Success, Result, Message, Value, Exception
-// Result<T>
-// Result<SuccessValue, FailureValue>
-// get Result.error - create and store new Error on first access - don't throw or create error right away
-// Result.exception
-// success: boolean; - readonly
-// failure: boolean; - readonly
-
 class MyTestClass {
 
     createResult: ResultHandler;
@@ -52,6 +42,11 @@ class MyTestClass {
         } else {
             return result.Success(123);
         }
+    }
+
+    throws() {
+        const r = new Result();
+        r.throw('some message');
     }
 
 }

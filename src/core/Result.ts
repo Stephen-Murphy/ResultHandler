@@ -24,6 +24,9 @@ export type ResultHandler = {
     <T = any>(method: Function): Result<T>;
 }
 
+const newLine = `
+`;
+
 export class Result<T = any> {
 
     public get namespace() { return this._namespace; }
@@ -35,26 +38,29 @@ export class Result<T = any> {
     public get isSuccessful() { return this._successful; }
     private _successful?: boolean;
     public get error() { return this._error; }
-    private _error?: string | Error;
+    private _error?: string | Error | FailureResult;
 
     // createError() => new Error(this.namespace + this.method + this.error.toString())
     public get message() {
-        if (this._message) return this._message;
         let message = '';
         if (this._namespace) {
             message += this._namespace;
             if (this._method) message += '.';
         }
         if (this._method) message += this._method + '()';
-        if (message) message += ' - ';
         if (this._error) {
-            if (typeof this._error === 'string') message += this._error;
-            else message += this._error.toString();
+            if (typeof this._error === 'string') {
+                if (message) message += ' - ';
+                message += this._error;
+            } else if (this._error instanceof Result || this._error instanceof Error) {
+                message += newLine + '    ' + this._error.message;
+            } else {
+                if (message) message += ' - ';
+                message += this._error.toString();
+            }
         }
-        this._message = message;
         return message;
     }
-    private _message?: string;
 
     public success(value?: T): SuccessResult<T> {
         this._value = value;
@@ -66,13 +72,13 @@ export class Result<T = any> {
         return (new Result<T>()).success(value);
     }
 
-    public failure(error?: string | Error): FailureResult {
+    public failure(error?: string | Error | FailureResult): FailureResult {
         this._error = error;
         this._successful = false;
         return this as FailureResult;
     }
 
-    public static Failure<T = any>(error?: string | Error) {
+    public static Failure<T = any>(error?: string | Error | FailureResult) {
         return (new Result<T>()).failure(error);
     }
 
@@ -80,11 +86,12 @@ export class Result<T = any> {
         if (!target || (typeof target !== 'string' && typeof target !== 'function') || !target!.constructor || !target!.constructor!.name)
             throw new Error('Result.Handler() must specify target or target name');
         const name: string = typeof target === 'string' ? target : target.name;
-        return <T>(method: Function) => {
-            if (typeof method !== 'function') throw new Error('Result.Handler()() - invalid method');
+        return <T>(method: Function | string) => {
+            if (typeof method !== 'string' && typeof method !== 'function')
+                throw new Error('Result.Handler()() - invalid method');
             const result = new Result<T>();
             result._namespace = name;
-            result._method = method.name;
+            result._method = typeof method === 'string' ? method : method.name;
             return result as Result<T>;
         };
     }

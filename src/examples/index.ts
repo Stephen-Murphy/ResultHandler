@@ -32,7 +32,7 @@ export class MyTestClass {
 
     throws(): Result<any> {
         const result = this.createResult<null>(this.throws);
-        return result.throw('reason');
+        return result.throw('reason'); // 'Error: MyTestClass.throws() - reason'
     }
 
 }

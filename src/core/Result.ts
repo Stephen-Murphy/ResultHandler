@@ -24,9 +24,6 @@ export type ResultHandler = {
     <T = any>(method: Function): Result<T>;
 }
 
-const newLine = `
-`;
-
 export class Result<T = any> {
 
     public get namespace() { return this._namespace; }
@@ -39,6 +36,8 @@ export class Result<T = any> {
     private _successful?: boolean;
     public get error() { return this._error; }
     private _error?: string | Error | FailureResult;
+    // supplementary when adding parent FailureResult
+    private _message?: string;
 
     // createError() => new Error(this.namespace + this.method + this.error.toString())
     public get message() {
@@ -48,12 +47,17 @@ export class Result<T = any> {
             if (this._method) message += '.';
         }
         if (this._method) message += this._method + '()';
+        if (this._message) {
+            if (message) message += ' - ';
+            message += this._message.toString();
+        }
         if (this._error) {
+            if (this._message && message) message += ' - ';
             if (typeof this._error === 'string') {
                 if (message) message += ' - ';
                 message += this._error;
             } else if (this._error instanceof Result || this._error instanceof Error) {
-                message += newLine + '    ' + this._error.message;
+                message += '\n    ' + this._error.message;
             } else {
                 if (message) message += ' - ';
                 message += this._error.toString();
@@ -72,9 +76,10 @@ export class Result<T = any> {
         return (new Result<T>()).success(value);
     }
 
-    public failure(error?: string | Error | FailureResult): FailureResult {
+    public failure(error?: string | Error | FailureResult, message?: string): FailureResult {
         this._error = error;
         this._successful = false;
+        this._message = message;
         return this as FailureResult;
     }
 

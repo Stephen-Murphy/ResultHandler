@@ -1,6 +1,6 @@
 {
     "name": "result-handler",
-    "version": "0.0.6",
+    "version": "0.1.0-rc1",
     "description": "Result Handler",
     "main": "dist/index.js",
     "scripts": {
@@ -39,11 +39,6 @@
     },
     "files": [
         "index.*",
-        "core/**/*",
-        "examples/**/*",
-        "test/**/*",
-        "jest.config.js",
-        "tsconfig.json",
-        "tslint.json"
+        "core/**/*"
     ]
 }

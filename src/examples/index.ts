@@ -1,38 +1,39 @@
-import { Result, ResultHandler } from "../core/Result";
+import { TaskHandler } from "../core/TaskHandler";
+import { TResult } from "../core/types";
+import { Task } from "../core/Task";
 
 
-const handler = Result.Handler(Result);
-function someMethod() {
-    const result = handler<number>(someMethod);
+export function exampleMethod() {
+    const task = new Task<number>('', exampleMethod.name);
     if (Math.random() > 0.5) {
-        return result.success(5);
+        return task.success(5);
     } else {
-        return result.failure();
+        return task.failure();
     }
 }
 
-someMethod();
+export class ExampleClass {
 
-export class MyTestClass {
-
-    createResult: ResultHandler;
+    public taskHandler: TaskHandler;
 
     constructor() {
-        this.createResult = Result.Handler(MyTestClass);
+        this.taskHandler = new TaskHandler(ExampleClass);
     }
 
-    someMethod() {
-        const result = this.createResult<number>(this.someMethod);
+    public exampleMethod(): TResult<number> {
+        const task = this.taskHandler.task<number>(this.exampleMethod);
         if (Math.random() > 0.1) {
-            return result.success(5);
+            return task.success(5);
         } else {
-            return result.failure('');
+            return task.failure('');
         }
     }
 
-    throws(): Result<any> {
-        const result = this.createResult<null>(this.throws);
-        return result.throw('reason'); // 'Error: MyTestClass.throws() - reason'
+    public nestedExample(): TResult<any> {
+        const task = this.taskHandler.task(this.exampleMethod);
+        const otherResult = this.exampleMethod();
+        if (otherResult.success) return task.success();
+        else return task.failure(otherResult);
     }
 
 }

@@ -39,4 +39,11 @@ export class Task<T> {
         return <FailureResult>(new TaskResult(this.namespace, this.method, false, <any>errorOrResult, <any>innerResult));
     }
 
+    // TODO
+    /* public static async All<T>(...tasks: Promise<TaskResult<T>>[]): Promise<TaskResult<T>> {
+        if (!tasks.length) return (new TaskResult<T>(undefined, undefined, true));
+        
+        throw new Error("unimplemented");
+    } */
+
 }

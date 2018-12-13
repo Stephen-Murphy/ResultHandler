@@ -48,7 +48,7 @@ export class TaskResult<T> {
 
         if (this.innerResult) {
             if (message) message += '\n';
-            message += <string>(<any>this.innerResult.toString)(depth + 1);
+            message += <string>(<any>this.innerResult.toString)(depth / 4 + 1);
         }
 
         return (Array(depth).fill(' ').join('')) + message;

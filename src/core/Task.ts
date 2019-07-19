@@ -1,7 +1,6 @@
 import { TaskResult } from "./TaskResult";
 import { FailureResult, SuccessResult } from "./types";
 
-
 export class Task<T> {
 
     private readonly namespace?: string;
@@ -42,7 +41,6 @@ export class Task<T> {
     // TODO
     /* public static async All<T>(...tasks: Promise<TaskResult<T>>[]): Promise<TaskResult<T>> {
         if (!tasks.length) return (new TaskResult<T>(undefined, undefined, true));
-        
         throw new Error("unimplemented");
     } */
 

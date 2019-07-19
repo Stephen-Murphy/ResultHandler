@@ -30,8 +30,8 @@ export class TaskResult<T> {
 
     public toString(): string {
 
-        const depth: number = (arguments[0] || 0) * 4; // internal type hack
-        let message: string = '';
+        const depth: number = arguments[0] || 0; // internal type hack
+        let message: string = "";
 
         if (this.namespace) {
             message += this.namespace;
@@ -41,17 +41,17 @@ export class TaskResult<T> {
         }
 
         if (this.error) {
-            if (message) message += ' - ';
-            if (typeof this.error === 'string') message += this.error;
-            else if (this.error instanceof Error) message += this.error.message || '';
+            if (message) message += " - ";
+            if (typeof this.error === "string") message += this.error;
+            else if (this.error instanceof Error) message += this.error.message || "";
         }
 
         if (this.innerResult) {
-            if (message) message += '\n';
-            message += <string>(<any>this.innerResult.toString)(depth / 4 + 1);
+            if (message) message += "\n";
+            message += <string>(<any>this.innerResult.toString)(depth + 4);
         }
 
-        return (Array(depth).fill(' ').join('')) + message;
+        return (Array(depth).fill(" ").join("")) + message;
 
     }
 

@@ -4,7 +4,7 @@ import { Task } from "../core/Task";
 
 
 export function exampleMethod() {
-    const task = new Task<number>('', exampleMethod.name);
+    const task = new Task<number>("example", exampleMethod.name);
     if (Math.random() > 0.5) {
         return task.success(5);
     } else {
@@ -25,7 +25,7 @@ export class ExampleClass {
         if (Math.random() > 0.1) {
             return task.success(5);
         } else {
-            return task.failure('');
+            return task.failure("error message");
         }
     }
 

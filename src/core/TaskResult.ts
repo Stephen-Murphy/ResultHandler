@@ -32,30 +32,34 @@ export class TaskResult<T> {
 
     public toString(): string {
 
-        // TODO: as some objects can have radix passed to toString(), convert this from recursive to iterative and do all the work in the initial toString call
+        let depth = 0;
+        let message = "";
 
-        const depth: number = arguments[0] || 0; // internal type hack
-        let message: string = "";
+        let current: TaskResult<any> | undefined = this as TaskResult<any>;
+        while (current) {
 
-        if (this.namespace) {
-            message += this.namespace;
-            if (this.method) message += `.${this.method}()`;
-        } else if (this.method) {
-            message += `${this.method}()`;
+            if (current.namespace) {
+                message += current.namespace;
+                if (current.method) message += `.${current.method}()`;
+            } else if (current.method) {
+                message += `${current.method}()`;
+            }
+
+            if (current.error) {
+                if (message) message += " - ";
+                if (typeof current.error === "string") message += current.error;
+                else if (current.error instanceof Error) message += current.error.message || "";
+            }
+
+            current = current.innerResult as TaskResult<any> | undefined;
+
+            if (current) {
+                message += "\n" + Array(depth++).fill("    ").join("");
+            }
+
         }
 
-        if (this.error) {
-            if (message) message += " - ";
-            if (typeof this.error === "string") message += this.error;
-            else if (this.error instanceof Error) message += this.error.message || "";
-        }
-
-        if (this.innerResult) {
-            if (message) message += "\n";
-            message += <string>(<any>this.innerResult.toString)(depth + 4);
-        }
-
-        return (Array(depth).fill(" ").join("")) + message;
+        return message;
 
     }
 

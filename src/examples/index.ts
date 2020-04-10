@@ -29,8 +29,8 @@ export class ExampleClass {
         }
     }
 
-    public nestedExample(): TResult<any> {
-        const task = this.taskHandler.task(this.exampleMethod);
+    public nestedExample(): TResult<void> {
+        const task = this.taskHandler.task<void>(this.exampleMethod);
         const otherResult = this.exampleMethod();
         if (otherResult.success) return task.success();
         else return task.failure(otherResult);

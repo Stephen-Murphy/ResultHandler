@@ -10,5 +10,5 @@ export type FailureResult = {
 
 export type SuccessResult<T> = {
     success: true;
-    value: T;
+    value: T extends void ? undefined : T;
 };

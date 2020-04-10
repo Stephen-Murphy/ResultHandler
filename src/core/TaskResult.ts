@@ -22,6 +22,8 @@ export class TaskResult<T> {
             if (innerResult) {
                 this.innerResult = innerResult;
                 this.error = <string | Error>errorOrValue;
+            } else if (errorOrValue instanceof TaskResult) {
+                this.innerResult = errorOrValue as FailureResult;
             } else {
                 this.error = <string | Error | undefined>errorOrValue;
             }
@@ -29,6 +31,8 @@ export class TaskResult<T> {
     }
 
     public toString(): string {
+
+        // TODO: as some objects can have radix passed to toString(), convert this from recursive to iterative and do all the work in the initial toString call
 
         const depth: number = arguments[0] || 0; // internal type hack
         let message: string = "";

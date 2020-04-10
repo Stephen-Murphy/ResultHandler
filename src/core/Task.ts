@@ -47,7 +47,7 @@ export class Task<T> {
             (result: TResult<T>) => void :
             (err?: string | Error) => void): this {
 
-        if (!["failure", "success", "complete"].includes(eventName))
+        if (!["error", "failure", "success", "complete"].includes(eventName))
             throw new Error(`Task.on(eventName, ...): unknown task event name: ${eventName}`);
         if (typeof callback !== "function")
             throw new Error(`Task.on(..., callback): invalid callback - must be a function`);
@@ -78,7 +78,7 @@ export class Task<T> {
             (result: TResult<T>) => void :
             (err?: string | Error) => void): this {
 
-        if (!["failure", "success", "complete"].includes(eventName))
+        if (!["error", "failure", "success", "complete"].includes(eventName))
             throw new Error(`Task.off(eventName, ...): unknown task event name: ${eventName}`);
         if (typeof callback !== "function")
             throw new Error(`Task.off(..., callback): invalid callback - must be a function`);
@@ -100,19 +100,20 @@ export class Task<T> {
      * @memberof Task
      */
     public try(fn: () => T | TResult<T>, directReturn = false): TResult<T> {
+        let result;
         try {
-            const result = fn();
-            if (!directReturn && (result instanceof TaskResult)) {
-                if (result.success) {
-                    return this.success(result.value);
-                } else {
-                    return this.failure(<FailureResult>result);
-                }
-            }
-            return this.success(result as T extends void ? undefined : T);
+            result = fn();
         } catch (e) {
             return this.failure(e);
         }
+        if (!directReturn && (result instanceof TaskResult)) {
+            if (result.success) {
+                return this.success(result.value);
+            } else {
+                return this.failure(<FailureResult>result);
+            }
+        }
+        return this.success(result as T extends void ? undefined : T);
     }
 
     /**
@@ -124,19 +125,20 @@ export class Task<T> {
      * @memberof Task
      */
     public async tryAsync(fn: () => Promise<T | TResult<T>>, directReturn = false): Promise<TResult<T>> {
+        let result;
         try {
-            const result = await fn();
-            if (!directReturn && (result instanceof TaskResult)) {
-                if (result.success) {
-                    return this.success(result.value);
-                } else {
-                    return this.failure(<FailureResult>result);
-                }
-            }
-            return this.success(result as T extends void ? undefined : T);
+            result = await fn();
         } catch (e) {
             return await this.failureAsync(e);
         }
+        if (!directReturn && (result instanceof TaskResult)) {
+            if (result.success) {
+                return this.success(result.value);
+            } else {
+                return this.failure(<FailureResult>result);
+            }
+        }
+        return this.success(result as T extends void ? undefined : T);
     }
 
     public success(value: T extends void ? void : T): SuccessResult<T> {

@@ -12,18 +12,32 @@ type RegisteredCompleteEvent<T> = [CompleteEventName, (result: TResult<T>) => an
 type RegisteredErrorEvent = ["error", (err?: string | Error | any) => any];
 
 type RegisteredEvent<T> = RegisteredFailureEvent | RegisteredSuccessEvent<T> | RegisteredCompleteEvent<T> | RegisteredErrorEvent;
+type EventCallbackArg<E, T> = E extends "failure" ?
+    (result: FailureResult) => any :
+    E extends "success" ?
+    (result: SuccessResult<T>) => any :
+    E extends "complete" ?
+    (result: TResult<T>) => any :
+    (err?: string | Error) => any
 
 export class Task<T> {
 
     private readonly namespace?: string;
     private readonly method?: string;
     private _onFailure?: any;
+    private _complete?: boolean;
     private readonly _listeners: Array<RegisteredEvent<T>>;
+    public get complete() { return this._complete; }
 
     constructor(namespace?: string, method?: string) {
         this.namespace = namespace;
         this.method = method;
+        this._complete = false;
         this._listeners = [];
+    }
+
+    private _ensureTaskNotComplete(fnName: string) {
+        if (this._complete) throw new Error(`Cannot run Task.${fnName}: task has already completed`);
     }
 
     /**
@@ -38,14 +52,9 @@ export class Task<T> {
     public on(eventName: "failure", callback: (result: FailureResult) => any): this;
     public on(eventName: "success", callback: (result: SuccessResult<T>) => any): this;
     public on(eventName: "complete", callback: (result: TResult<T>) => any): this;
-    public on<E extends TaskEventName | "error">(eventName: E,
-        callback: E extends "failure" ?
-            (result: FailureResult) => any :
-            E extends "success" ?
-            (result: SuccessResult<T>) => any :
-            E extends "complete" ?
-            (result: TResult<T>) => any :
-            (err?: string | Error) => any): this {
+    public on<E extends TaskEventName | "error">(eventName: E, callback: EventCallbackArg<E, T>): this {
+
+        this._ensureTaskNotComplete(this.on.name);
 
         if (!["error", "failure", "success", "complete"].includes(eventName))
             throw new Error(`Task.on(eventName, ...): unknown task event name: ${eventName}`);
@@ -55,6 +64,7 @@ export class Task<T> {
         this._listeners.push([eventName, callback] as RegisteredEvent<T>);
 
         return this;
+
     }
 
     /**
@@ -69,14 +79,10 @@ export class Task<T> {
     public off(eventName: "failure", callback: (result: FailureResult) => any): this;
     public off(eventName: "success", callback: (result: SuccessResult<T>) => any): this;
     public off(eventName: "complete", callback: (result: TResult<T>) => any): this;
-    public off<E extends TaskEventName>(eventName: E,
-        callback: E extends "failure" ?
-            (result: FailureResult) => any :
-            E extends "success" ?
-            (result: SuccessResult<T>) => any :
-            E extends "complete" ?
-            (result: TResult<T>) => any :
-            (err?: string | Error) => any): this {
+    public off<E extends TaskEventName>(eventName: E, callback: EventCallbackArg<E, T>): this {
+
+        // calling off() after task has completed won't have side effects or detremental effects to remove listeners
+        // this._ensureTaskNotComplete(this.off.name);
 
         if (!["error", "failure", "success", "complete"].includes(eventName))
             throw new Error(`Task.off(eventName, ...): unknown task event name: ${eventName}`);
@@ -89,17 +95,22 @@ export class Task<T> {
         }
 
         return this;
+
     }
 
     public success(value: T extends void ? void : T): SuccessResult<T> {
+        this._ensureTaskNotComplete(this.success.name);
         const result = new TaskResult<T>(this.namespace, this.method, true, value as any) as SuccessResult<T>;
+        this._complete = true;
         this._fireEvents("success", result);
         return result;
     }
 
     // success async will await until all handlers have returned (asynchronously, in sequence)
     public async successAsync(value: T extends void ? void : T): Promise<SuccessResult<T>> {
+        this._ensureTaskNotComplete(this.successAsync.name);
         const result = new TaskResult<T>(this.namespace, this.method, true, value as any) as SuccessResult<T>;
+        this._complete = true;
         await this._fireEventsAsync("success", result);
         return result;
     }
@@ -107,8 +118,10 @@ export class Task<T> {
     public failure(error?: string | Error | FailureResult): FailureResult;
     public failure(error: string | Error, innerResult: FailureResult): FailureResult;
     public failure(errorOrResult?: string | Error | FailureResult, innerResult?: FailureResult): FailureResult {
+        this._ensureTaskNotComplete(this.failure.name);
         if (this._onFailure) try { this._onFailure(); } catch { }
         const result = new TaskResult<T>(this.namespace, this.method, false, <any>errorOrResult, <any>innerResult) as FailureResult;
+        this._complete = true;
         this._fireEvents("failure", result);
         return result;
     }
@@ -117,8 +130,10 @@ export class Task<T> {
     public async failureAsync(error?: string | Error | FailureResult): Promise<FailureResult>;
     public async failureAsync(error: string | Error, innerResult: FailureResult): Promise<FailureResult>;
     public async failureAsync(errorOrResult?: string | Error | FailureResult, innerResult?: FailureResult): Promise<FailureResult> {
+        this._ensureTaskNotComplete(this.failureAsync.name);
         if (this._onFailure) try { await this._onFailure(); } catch { }
         const result = new TaskResult<T>(this.namespace, this.method, false, <any>errorOrResult, <any>innerResult) as FailureResult;
+        this._complete = true;
         await this._fireEventsAsync("failure", result);
         return result;
     }
@@ -136,20 +151,20 @@ export class Task<T> {
     }
 
     // 0.2.0
-    public static Run<U>(fn: () => U): TResult<U> {
+    public static Run<U>(fn: (task: Task<U>) => U): TResult<U> {
         const task = new Task<U>();
         try {
-            return task.success(fn() as U extends void ? void : U);
+            return task.success(fn(task) as U extends void ? void : U);
         } catch (err) {
             return task.failure(err);
         }
     }
 
     // 0.2.0
-    public static async RunAsync<U>(fn: () => Promise<U>): Promise<TResult<U>> {
+    public static async RunAsync<U>(fn: (task: Task<U>) => Promise<U>): Promise<TResult<U>> {
         const task = new Task<U>();
         try {
-            return task.success((await fn()) as U extends void ? void : U);
+            return task.success((await fn(task)) as U extends void ? void : U);
         } catch (err) {
             return task.failure(err);
         }

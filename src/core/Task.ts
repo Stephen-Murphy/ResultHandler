@@ -152,21 +152,29 @@ export class Task<T> {
 
     // 0.2.0
     public static Run<U>(fn: (task: Task<U>) => U): TResult<U> {
-        const task = new Task<U>();
+        return new Task<U>().run(fn);
+    }
+
+    // 0.2.0
+    public static RunAsync<U>(fn: (task: Task<U>) => Promise<U>): Promise<TResult<U>> {
+        return new Task<U>().runAsync(fn);
+    }
+
+    // 0.2.0
+    public run(fn: (task: Task<T>) => T): TResult<T> {
         try {
-            return task.success(fn(task) as U extends void ? void : U);
+            return this.success(fn(this) as T extends void ? void : T);
         } catch (err) {
-            return task.failure(err);
+            return this.failure(err);
         }
     }
 
     // 0.2.0
-    public static async RunAsync<U>(fn: (task: Task<U>) => Promise<U>): Promise<TResult<U>> {
-        const task = new Task<U>();
+    public async runAsync(fn: (task: Task<T>) => Promise<T>): Promise<TResult<T>> {
         try {
-            return task.success((await fn(task)) as U extends void ? void : U);
+            return this.success((await fn(this)) as T extends void ? void : T);
         } catch (err) {
-            return task.failure(err);
+            return this.failure(err);
         }
     }
 
